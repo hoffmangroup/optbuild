@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.1.1.1 $"
+__version__ = "$Revision: 1.2 $"
 
 import optparse
 import subprocess
@@ -62,7 +62,7 @@ class OptionBuilder(optparse.OptionParser):
         """
         cmdline = self.build_cmdline(kwargs, args)
 
-        autolog.info("executing %s", " ".join(cmdline))
+        autolog[".exec"].info(" ".join(cmdline))
         pipe = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
         res = pipe.communicate()[0]
 
@@ -78,7 +78,7 @@ class OptionBuilder(optparse.OptionParser):
         """
         cmdline = self.build_cmdline(kwargs, args)
 
-        autolog.info("executing %s", " ".join(cmdline))
+        autolog[".exec"].info(" ".join(cmdline))
         returncode = subprocess.call(cmdline)
         if returncode:
             raise ReturncodeError, (cmdline, returncode)
