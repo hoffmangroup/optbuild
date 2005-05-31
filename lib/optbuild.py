@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 
 import optparse
 import subprocess
 import sys
 
 from autolog import autolog
+
+LOG = autolog()
 
 class ReturncodeError(RuntimeError):
     def __init__(self, cmdline, returncode, stdout=None):
@@ -62,7 +64,7 @@ class OptionBuilder(optparse.OptionParser):
         """
         cmdline = self.build_cmdline(kwargs, args)
 
-        autolog[".exec"].info(" ".join(cmdline))
+        LOG[".exec"].info(" ".join(cmdline))
         pipe = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
         res = pipe.communicate()[0]
 
@@ -78,7 +80,7 @@ class OptionBuilder(optparse.OptionParser):
         """
         cmdline = self.build_cmdline(kwargs, args)
 
-        autolog[".exec"].info(" ".join(cmdline))
+        LOG[".exec"].info(" ".join(cmdline))
         returncode = subprocess.call(cmdline)
         if returncode:
             raise ReturncodeError, (cmdline, returncode)
@@ -102,6 +104,16 @@ class OptionBuilder_ShortOptWithSpace(OptionBuilder):
             return []
         else:
             return ["-%s" % option, str(value)]
+
+class OptionBuilder_NoHyphenWithEquals(OptionBuilder):
+    @staticmethod
+    def build_option(option, value):
+        if isinstance(value, bool):
+            value = int(value)
+        elif value is None:
+            return []
+
+        return ["%s=%s" % (option, value)]
 
 def main(args):
     pass
