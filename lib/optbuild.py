@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 
 import optparse
 import subprocess
@@ -9,7 +9,7 @@ import sys
 
 from autolog import autolog
 
-LOG = autolog()
+_log = autolog()
 
 class ReturncodeError(RuntimeError):
     def __init__(self, cmdline, returncode, stdout=None):
@@ -64,7 +64,7 @@ class OptionBuilder(optparse.OptionParser):
         """
         cmdline = self.build_cmdline(kwargs, args)
 
-        LOG[".exec"].info(" ".join(cmdline))
+        _log[".exec"].info(" ".join(cmdline))
         pipe = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
         res = pipe.communicate()[0]
 
@@ -80,7 +80,7 @@ class OptionBuilder(optparse.OptionParser):
         """
         cmdline = self.build_cmdline(kwargs, args)
 
-        LOG[".exec"].info(" ".join(cmdline))
+        _log[".exec"].info(" ".join(cmdline))
         returncode = subprocess.call(cmdline)
         if returncode:
             raise ReturncodeError, (cmdline, returncode)
