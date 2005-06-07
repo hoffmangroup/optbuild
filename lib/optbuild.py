@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.4 $"
+__version__ = "$Revision: 1.5 $"
 
+import new
 import optparse
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import sys
 from autolog import autolog
 
 _log = autolog()
+_log_exec = _log[".exec"]
 
 class ReturncodeError(RuntimeError):
     def __init__(self, cmdline, returncode, stdout=None):
@@ -31,6 +33,12 @@ class OptionBuilder(optparse.OptionParser):
     def _build_option(self, option, value):
         return self.build_option(self.convert_option_name(option), value)
 
+    def _build_options(self, options):
+        # XXX: use the option_list to check/convert the options
+
+        return [self._build_option(*option_item)
+                for option_item in options.iteritems()]
+
     @staticmethod
     def build_option(option, value):
         if value is True:
@@ -39,18 +47,9 @@ class OptionBuilder(optparse.OptionParser):
             return []
         else:
             return ["--%s=%s" % (option, value)]
-    
+
     def build_args(self, options={}, args=[]):
-        # XXX: use the option_list to check/convert the options
-
-        res = []
-        
-        for option_item in options.iteritems():
-            res.extend(self._build_option(*option_item))
-
-        res.extend(args)
-
-        return res
+        return self._build_options(options) + args
 
     def build_cmdline(self, options={}, args=[], prog=None):
         if prog is None:
@@ -64,7 +63,7 @@ class OptionBuilder(optparse.OptionParser):
         """
         cmdline = self.build_cmdline(kwargs, args)
 
-        _log[".exec"].info(" ".join(cmdline))
+        _log_exec.info(" ".join(cmdline))
         pipe = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
         res = pipe.communicate()[0]
 
@@ -80,7 +79,7 @@ class OptionBuilder(optparse.OptionParser):
         """
         cmdline = self.build_cmdline(kwargs, args)
 
-        _log[".exec"].info(" ".join(cmdline))
+        _log_exec.info(" ".join(cmdline))
         returncode = subprocess.call(cmdline)
         if returncode:
             raise ReturncodeError, (cmdline, returncode)
@@ -114,6 +113,28 @@ class OptionBuilder_NoHyphenWithEquals(OptionBuilder):
             return []
 
         return ["%s=%s" % (option, value)]
+
+class AddableMixinMetaclass(type):
+    def __add__(cls, other):
+        name = "(%s.%s + %s.%s)" % (cls.__module__, cls.__name__,
+                                    other.__module__, other.__name__)
+        return new.classobj(name, (cls, other), {})
+
+    __radd__ = __add__
+
+    def __repr__(cls):
+        if cls.__name__.startswith("("):
+            # eliminates the __module__ part
+            return "<class '%s'>" % cls.__name__
+        else:
+            return type.__repr__(cls)
+
+class AddableMixin(object):
+    __metaclass__ = AddableMixinMetaclass
+
+class Mixin_ArgsFirst(AddableMixin):
+    def build_args(self, options={}, args=[]):
+        return args + self._build_options(options)
 
 def main(args):
     pass
