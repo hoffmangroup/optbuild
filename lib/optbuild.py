@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.5 $"
+__version__ = "$Revision: 1.6 $"
 
 import new
 import optparse
@@ -48,10 +48,10 @@ class OptionBuilder(optparse.OptionParser):
         else:
             return ["--%s=%s" % (option, value)]
 
-    def build_args(self, options={}, args=[]):
-        return self._build_options(options) + args
+    def build_args(self, options={}, args=()):
+        return self._build_options(options) + list(args)
 
-    def build_cmdline(self, options={}, args=[], prog=None):
+    def build_cmdline(self, options={}, args=(), prog=None):
         if prog is None:
             prog = self.prog
             
@@ -129,12 +129,28 @@ class AddableMixinMetaclass(type):
         else:
             return type.__repr__(cls)
 
+def _id(obj):
+    # found on python-dev somewhere to get around negative id()
+    return (sys.maxint * 2 + 1) & id(obj)
+
 class AddableMixin(object):
     __metaclass__ = AddableMixinMetaclass
 
+    def __repr__(self):
+        if self.__class__.__name__.startswith("("):
+            return "<%s object at 0x%x>" % (self.__class__.__name__, _id(self))
+        else:
+            return object.__repr__(self)
+
+    def __new__(self, *args, **kwargs):
+        return object.__new__(self)
+
+    def __init__(self, *args, **kwargs):
+        return super(object, self).__init__(*args, **kwargs)
+
 class Mixin_ArgsFirst(AddableMixin):
-    def build_args(self, options={}, args=[]):
-        return args + self._build_options(options)
+    def build_args(self, options={}, args=()):
+        return list(args) + self._build_options(options)
 
 def main(args):
     pass
