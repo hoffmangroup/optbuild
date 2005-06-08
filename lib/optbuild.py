@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.6 $"
+__version__ = "$Revision: 1.7 $"
 
 import new
 import optparse
@@ -31,14 +31,20 @@ class OptionBuilder(optparse.OptionParser):
         return option.replace("_", "-")
 
     def _build_option(self, option, value):
+        """always returns a list"""
         return self.build_option(self.convert_option_name(option), value)
-
+    
     def _build_options(self, options):
         # XXX: use the option_list to check/convert the options
 
-        return [self._build_option(*option_item)
-                for option_item in options.iteritems()]
-
+        # can't use a listcomp because _build_option always returns a
+        # list and the empty ones have to be eaten somehow
+        
+        res = []
+        for option_item in options.iteritems():
+            res.extend(self._build_option(*option_item))
+        return res
+            
     @staticmethod
     def build_option(option, value):
         if value is True:
