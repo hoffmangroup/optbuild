@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.7 $"
+__version__ = "$Revision: 1.8 $"
 
 import new
 import optparse
 import subprocess
+from subprocess import PIPE
 import sys
 
 from autolog import autolog
@@ -14,10 +15,11 @@ _log = autolog()
 _log_exec = _log[".exec"]
 
 class ReturncodeError(RuntimeError):
-    def __init__(self, cmdline, returncode, stdout=None):
+    def __init__(self, cmdline, returncode, stdout=None, stderr=None):
         self.cmdline = cmdline
         self.returncode = returncode
         self.stdout = stdout
+        self.stderr = stderr
 
     def __str__(self):
         return "%s returned %s" % (self.cmdline[0], self.returncode)
@@ -54,38 +56,54 @@ class OptionBuilder(optparse.OptionParser):
         else:
             return ["--%s=%s" % (option, value)]
 
-    def build_args(self, options={}, args=()):
+    def build_args(self, args=(), options={}):
         return self._build_options(options) + list(args)
 
-    def build_cmdline(self, options={}, args=(), prog=None):
+    def build_cmdline(self, args=(), options={}, prog=None):
         if prog is None:
             prog = self.prog
             
-        return [prog] + self.build_args(options, args)
+        res = [prog] + self.build_args(options, args)
+        _log_exec.info(" ".join(res))
+
+        return res
+
+    def _getoutput(self, args, options, stdout=None, stderr=None):
+        cmdline = self.build_cmdline(options, args)
+        pipe = subprocess.Popen(cmdline, stdout=stdout, stderr=stderr)
+        data_stdout, data_stderr = pipe.communicate()
+
+        returncode = pipe.wait()
+        if returncode:
+            raise ReturncodeError, (cmdline, returncode,
+                                    data_stdout, data_stderr)
+
+        res = []
+        if stdout == PIPE:
+            res.append(data_stdout)
+        if stderr == PIPE:
+            res.append(data_stderr)
+
+        return tuple(res)
+
+    def getoutput_error(self, *args, **kwargs):
+        """
+        runs a program and gets the stdout and error
+        """
+        return self._getoutput(args, kwargs, stdout=PIPE, stderr=PIPE)
 
     def getoutput(self, *args, **kwargs):
         """
         runs a program and gets the stdout
         """
-        cmdline = self.build_cmdline(kwargs, args)
-
-        _log_exec.info(" ".join(cmdline))
-        pipe = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
-        res = pipe.communicate()[0]
-
-        returncode = pipe.wait()
-        if returncode:
-            raise ReturncodeError, (cmdline, returncode, res)
-
-        return res
+        return self._getoutput(args, kwargs, stdout=PIPE)
 
     def run(self, *args, **kwargs):
         """
         runs a program and ignores the stdout
         """
-        cmdline = self.build_cmdline(kwargs, args)
+        cmdline = self.build_cmdline(args, kwargs)
 
-        _log_exec.info(" ".join(cmdline))
         returncode = subprocess.call(cmdline)
         if returncode:
             raise ReturncodeError, (cmdline, returncode)
