@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.8 $"
+__version__ = "$Revision: 1.9 $"
 
 import new
 import optparse
@@ -63,7 +63,7 @@ class OptionBuilder(optparse.OptionParser):
         if prog is None:
             prog = self.prog
             
-        res = [prog] + self.build_args(options, args)
+        res = [prog] + self.build_args(args, options)
         _log_exec.info(" ".join(res))
 
         return res
