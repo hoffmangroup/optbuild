@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.9 $"
+__version__ = "$Revision: 1.10 $"
 
 import new
 import optparse
@@ -69,7 +69,7 @@ class OptionBuilder(optparse.OptionParser):
         return res
 
     def _getoutput(self, args, options, stdout=None, stderr=None):
-        cmdline = self.build_cmdline(options, args)
+        cmdline = self.build_cmdline(args, options)
         pipe = subprocess.Popen(cmdline, stdout=stdout, stderr=stderr)
         data_stdout, data_stderr = pipe.communicate()
 
