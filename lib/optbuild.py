@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.11 $"
+__version__ = "$Revision: 1.12 $"
 
 import new
 import optparse
@@ -13,6 +13,13 @@ from autolog import autolog
 
 _log = autolog()
 _log_exec = _log[".exec"]
+
+def _write_log_exec(cmdline):
+    if " " in "".join(cmdline):
+        _log_exec.info(" ".join("'%s'" % arg.encode("string_escape")
+                                for arg in cmdline))
+    else:
+        _log_exec.info(" ".join(cmdline))
 
 class ReturncodeError(RuntimeError):
     def __init__(self, cmdline, returncode, stdout=None, stderr=None):
@@ -65,8 +72,8 @@ class OptionBuilder(optparse.OptionParser):
             
         res = [prog]
         res.extend(self.build_args(args, options))
-        
-        _log_exec.info(" ".join(res))
+
+        _write_log_exec(res)
         return res
 
     def _getoutput(self, args, options, stdout=None, stderr=None):
