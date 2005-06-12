@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.15 $"
+__version__ = "$Revision: 1.16 $"
 
 import new
 import optparse
@@ -140,6 +140,14 @@ class OptionBuilder(optparse.OptionParser):
         returncode = subprocess.call(cmdline)
         if returncode:
             raise ReturncodeError, (cmdline, returncode)
+
+    def popen(self, *args, **kwargs):
+        """
+        spawns a program and doesn't wait for it to return
+        """
+        cmdline = self.build_cmdline(args, kwargs)
+
+        return subprocess.Popen(cmdline)
 
 class OptionBuilder_LongOptWithSpace(OptionBuilder):
     @staticmethod
