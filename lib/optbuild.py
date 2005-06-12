@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.13 $"
+__version__ = "$Revision: 1.14 $"
 
 import new
 import optparse
@@ -206,7 +206,7 @@ class AddableMixin(object):
         return super(object, self).__init__(*args, **kwargs)
 
 class Mixin_ArgsFirst(AddableMixin):
-    def build_args(self, options={}, args=()):
+    def build_args(self, args=(), options={}):
         return list(args) + self._build_options(options)
 
 def main(args):
