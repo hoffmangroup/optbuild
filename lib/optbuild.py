@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.14 $"
+__version__ = "$Revision: 1.15 $"
 
 import new
 import optparse
@@ -22,11 +22,11 @@ def _write_log_exec(cmdline):
         _log_exec.info(" ".join(cmdline))
 
 class ReturncodeError(RuntimeError):
-    def __init__(self, cmdline, returncode, stdout=None, stderr=None):
+    def __init__(self, cmdline, returncode, output=None, error=None):
         self.cmdline = cmdline
         self.returncode = returncode
-        self.stdout = stdout
-        self.stderr = stderr
+        self.output = output
+        self.error = error
 
     def __str__(self):
         return "%s returned %s" % (self.cmdline[0], self.returncode)
