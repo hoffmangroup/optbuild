@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.12 $"
+__version__ = "$Revision: 1.13 $"
 
 import new
 import optparse
@@ -30,6 +30,12 @@ class ReturncodeError(RuntimeError):
 
     def __str__(self):
         return "%s returned %s" % (self.cmdline[0], self.returncode)
+
+class Stdin(str):
+    """
+    indicate that an "argument" is actually input
+    """
+    pass
 
 class OptionBuilder(optparse.OptionParser):
     """
@@ -76,23 +82,42 @@ class OptionBuilder(optparse.OptionParser):
         _write_log_exec(res)
         return res
 
-    def _getoutput(self, args, options, stdout=None, stderr=None):
+    def _popen(self, args, options, input=None,
+               stdin=None, stdout=None, stderr=None):
         cmdline = self.build_cmdline(args, options)
-        pipe = subprocess.Popen(cmdline, stdout=stdout, stderr=stderr)
-        data_stdout, data_stderr = pipe.communicate()
+        pipe = subprocess.Popen(cmdline,
+                                stdin=stdin, stdout=stdout, stderr=stderr)
+        output, error = pipe.communicate(input)
 
         returncode = pipe.wait()
         if returncode:
             raise ReturncodeError, (cmdline, returncode,
-                                    data_stdout, data_stderr)
+                                    output, error)
 
         res = []
         if stdout == PIPE:
-            res.append(data_stdout)
+            res.append(output)
         if stderr == PIPE:
-            res.append(data_stderr)
+            res.append(error)
 
-        return tuple(res)
+        if len(res) == 1:
+            return res[0]
+        else:
+            return tuple(res)
+
+    def _getoutput(self, args, options, stdout=None, stderr=None):
+        input = None
+        stdin = PIPE
+
+        try:
+            if isinstance(args[0], Stdin):
+                input = args[0]
+                stdin = PIPE
+                args = args[1:]
+        except IndexError:
+            pass
+            
+        return self._popen(args, options, input, stdin, stdout, stderr)
 
     def getoutput_error(self, *args, **kwargs):
         """
