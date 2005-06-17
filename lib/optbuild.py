@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.16 $"
+__version__ = "$Revision: 1.17 $"
 
 import new
 import optparse
@@ -31,11 +31,12 @@ class ReturncodeError(RuntimeError):
     def __str__(self):
         return "%s returned %s" % (self.cmdline[0], self.returncode)
 
-class Stdin(str):
+class Stdin(object):
     """
     indicate that an "argument" is actually input
     """
-    pass
+    def __init__(self, data):
+        self.data = data
 
 class OptionBuilder(optparse.OptionParser):
     """
@@ -107,12 +108,19 @@ class OptionBuilder(optparse.OptionParser):
 
     def _getoutput(self, args, options, stdout=None, stderr=None):
         input = None
-        stdin = PIPE
+        stdin = None
 
         try:
             if isinstance(args[0], Stdin):
-                input = args[0]
-                stdin = PIPE
+                if isinstance(args[0].data, basestring):
+                    input = args[0].data
+                    stdin = PIPE
+                elif isinstance(args[0].data, file):
+                    stdin = args[0].data
+                else:
+                    raise ValueError, \
+                          "Stdin arg does not contain basestring or file"
+                    
                 args = args[1:]
         except IndexError:
             pass
@@ -135,11 +143,8 @@ class OptionBuilder(optparse.OptionParser):
         """
         runs a program and ignores the stdout
         """
-        cmdline = self.build_cmdline(args, kwargs)
-
-        returncode = subprocess.call(cmdline)
-        if returncode:
-            raise ReturncodeError, (cmdline, returncode)
+        self._getoutput(args, kwargs)
+        return None
 
     def popen(self, *args, **kwargs):
         """
