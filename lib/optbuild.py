@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.17 $"
+__version__ = "$Revision: 1.18 $"
 
 import new
 import optparse
@@ -37,6 +37,12 @@ class Stdin(object):
     """
     def __init__(self, data):
         self.data = data
+
+class Cwd(str):
+    """
+    indicate that an "argument" is a directory to change to
+    """
+    pass
 
 class OptionBuilder(optparse.OptionParser):
     """
@@ -84,10 +90,10 @@ class OptionBuilder(optparse.OptionParser):
         return res
 
     def _popen(self, args, options, input=None,
-               stdin=None, stdout=None, stderr=None):
+               stdin=None, stdout=None, stderr=None, cwd=None):
         cmdline = self.build_cmdline(args, options)
-        pipe = subprocess.Popen(cmdline,
-                                stdin=stdin, stdout=stdout, stderr=stderr)
+        pipe = subprocess.Popen(cmdline, stdin=stdin, stdout=stdout,
+                                stderr=stderr, cwd=cwd)
         output, error = pipe.communicate(input)
 
         returncode = pipe.wait()
@@ -109,23 +115,24 @@ class OptionBuilder(optparse.OptionParser):
     def _getoutput(self, args, options, stdout=None, stderr=None):
         input = None
         stdin = None
+        cwd = None
 
-        try:
-            if isinstance(args[0], Stdin):
-                if isinstance(args[0].data, basestring):
-                    input = args[0].data
+        for arg_index, arg in args[:]:
+            if isinstance(arg, Stdin):
+                if isinstance(arg.data, basestring):
+                    input = arg.data
                     stdin = PIPE
-                elif isinstance(args[0].data, file):
-                    stdin = args[0].data
+                elif isinstance(arg.data, file):
+                    stdin = arg.data
                 else:
                     raise ValueError, \
                           "Stdin arg does not contain basestring or file"
-                    
-                args = args[1:]
-        except IndexError:
-            pass
+                del args[arg_index]
+            if isinstance(arg, Cwd):
+                cwd = arg
+                del args[arg_index]
             
-        return self._popen(args, options, input, stdin, stdout, stderr)
+        return self._popen(args, options, input, stdin, stdout, stderr, cwd)
 
     def getoutput_error(self, *args, **kwargs):
         """
