@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.19 $"
+__version__ = "$Revision: 1.20 $"
 
 import new
 import optparse
@@ -117,7 +117,8 @@ class OptionBuilder(optparse.OptionParser):
         stdin = None
         cwd = None
 
-        for arg_index, arg in enumerate(args[:]):
+        arg_list = list(args) # args is a a tuple
+        for arg_index, arg in enumerate(args):
             if isinstance(arg, Stdin):
                 if isinstance(arg.data, basestring):
                     input = arg.data
@@ -127,12 +128,12 @@ class OptionBuilder(optparse.OptionParser):
                 else:
                     raise ValueError, \
                           "Stdin arg does not contain basestring or file"
-                del args[arg_index]
+                del arg_list[arg_index]
             if isinstance(arg, Cwd):
                 cwd = arg
-                del args[arg_index]
+                del arg_list[arg_index]
             
-        return self._popen(args, options, input, stdin, stdout, stderr, cwd)
+        return self._popen(arg_list, options, input, stdin, stdout, stderr, cwd)
 
     def getoutput_error(self, *args, **kwargs):
         """
