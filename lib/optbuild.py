@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.18 $"
+__version__ = "$Revision: 1.19 $"
 
 import new
 import optparse
@@ -117,7 +117,7 @@ class OptionBuilder(optparse.OptionParser):
         stdin = None
         cwd = None
 
-        for arg_index, arg in args[:]:
+        for arg_index, arg in enumerate(args[:]):
             if isinstance(arg, Stdin):
                 if isinstance(arg.data, basestring):
                     input = arg.data
