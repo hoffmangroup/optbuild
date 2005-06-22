@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.21 $"
+__version__ = "$Revision: 1.22 $"
 
 import new
 import optparse
-import subprocess
-from subprocess import PIPE
+from subprocess import Popen, PIPE
 import sys
 
 from autolog import autolog
@@ -15,11 +14,14 @@ _log = autolog()
 _log_exec = _log[".exec"]
 
 def _write_log_exec(cmdline):
-    if " " in "".join(cmdline):
+    cmdline_strings = [arg for arg in cmdline if isinstance(arg, basestring)]
+    
+    if " " in "".join(cmdline_strings):
+        # quote every arg
         _log_exec.info(" ".join("'%s'" % arg.encode("string_escape")
-                                for arg in cmdline))
+                                for arg in cmdline_strings))
     else:
-        _log_exec.info(" ".join(cmdline))
+        _log_exec.info(" ".join(cmdline_strings))
 
 class ReturncodeError(RuntimeError):
     def __init__(self, cmdline, returncode, output=None, error=None):
@@ -48,6 +50,9 @@ class OptionBuilder(optparse.OptionParser):
     """
     GNU long-args style option builder
     """
+    def __init__(self, prog=None, *args, **kwargs):
+        optparse.OptionParser.__init__(self, prog=prog, *args, **kwargs)
+    
     @staticmethod
     def convert_option_name(option):
         return option.replace("_", "-")
@@ -92,8 +97,8 @@ class OptionBuilder(optparse.OptionParser):
     def _popen(self, args, options, input=None,
                stdin=None, stdout=None, stderr=None, cwd=None):
         cmdline = self.build_cmdline(args, options)
-        pipe = subprocess.Popen(cmdline, stdin=stdin, stdout=stdout,
-                                stderr=stderr, cwd=cwd)
+        pipe = Popen(cmdline, stdin=stdin, stdout=stdout, stderr=stderr,
+                     cwd=cwd)
         output, error = pipe.communicate(input)
 
         returncode = pipe.wait()
@@ -118,7 +123,7 @@ class OptionBuilder(optparse.OptionParser):
         cwd = None
 
         arg_list = []
-        for arg in enumerate(args):
+        for arg in args:
             if isinstance(arg, Stdin):
                 if isinstance(arg.data, basestring):
                     input = arg.data
@@ -161,7 +166,7 @@ class OptionBuilder(optparse.OptionParser):
         """
         cmdline = self.build_cmdline(args, kwargs)
 
-        return subprocess.Popen(cmdline)
+        return Popen(cmdline)
 
 class OptionBuilder_LongOptWithSpace(OptionBuilder):
     @staticmethod
