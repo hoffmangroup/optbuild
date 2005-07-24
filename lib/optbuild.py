@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.22 $"
+__version__ = "$Revision: 1.23 $"
 
 import new
 import optparse
@@ -52,6 +52,9 @@ class OptionBuilder(optparse.OptionParser):
     """
     def __init__(self, prog=None, *args, **kwargs):
         optparse.OptionParser.__init__(self, prog=prog, *args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        return self.run(*args, **kwargs)
     
     @staticmethod
     def convert_option_name(option):
