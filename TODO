@@ -1,0 +1,5 @@
+* publish
+* AddableMixin and AddableMixinMetaclass to Python cookbook
+* tests
+* documentation
+* implement reverse optparse wrapping functionality

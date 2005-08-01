@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.23 $"
+__version__ = "$Revision: 1.24 $"
 
 import new
 import optparse
+import signal
 from subprocess import Popen, PIPE
 import sys
 
@@ -23,7 +24,8 @@ def _write_log_exec(cmdline):
     else:
         _log_exec.info(" ".join(cmdline_strings))
 
-class ReturncodeError(RuntimeError):
+# proposed subprocess.CalledProcessError is an OSError; so is this:
+class ReturncodeError(OSError):
     def __init__(self, cmdline, returncode, output=None, error=None):
         self.cmdline = cmdline
         self.returncode = returncode
@@ -32,6 +34,15 @@ class ReturncodeError(RuntimeError):
 
     def __str__(self):
         return "%s returned %s" % (self.cmdline[0], self.returncode)
+
+class SignalError(ReturncodeError):
+    def __str__(self):
+        try:
+            signal_text = _signals[-self.returncode]
+        except KeyError:
+            signal_text = "signal %d" % -self.returncode
+        
+        return "%s terminated by %s" % (self.cmdline[0], signal_text)
 
 class Stdin(object):
     """
@@ -106,8 +117,11 @@ class OptionBuilder(optparse.OptionParser):
 
         returncode = pipe.wait()
         if returncode:
-            raise ReturncodeError, (cmdline, returncode,
-                                    output, error)
+            if returncode >= 0:
+                error_class = ReturncodeError
+            else:
+                error_class = SignalError
+            raise error_class, (cmdline, returncode,output, error)
 
         res = []
         if stdout == PIPE:
@@ -238,6 +252,16 @@ class AddableMixin(object):
 class Mixin_ArgsFirst(AddableMixin):
     def build_args(self, args=(), options={}):
         return list(args) + self._build_options(options)
+
+def _setup_signals():
+    res = {}
+    for key, value in vars(signal).iteritems():
+        if key.startswith("SIG") and key[4] != "_":
+            res[value] = key
+
+    return res
+
+_signals = _setup_signals()
 
 def main(args):
     pass
