@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version__ = "$Revision: 1.2 $"
+__version__ = "$Revision: 1.3 $"
 
 import sys
 import unittest
@@ -11,7 +11,9 @@ import optbuild
 
 class TestOptionBuilder(unittest.TestCase):
     def setUp(self):
-        self.ob = optbuild.OptionBuilder(prog="myprogram")
+        # not really a GNU option builder, but it's the only executable we know
+        # about for sure
+        self.ob = optbuild.OptionBuilder(prog=sys.executable)
     
     def test_convert_option_name(self):
         self.assertEqual(self.ob.convert_option_name("long_name"), "long-name")
@@ -26,26 +28,25 @@ class TestOptionBuilder(unittest.TestCase):
         self.assertEqual(self.ob.build_option("long_name2", None), [])
 
     def test_build_args(self):
-        self.assertEqual(self.ob.build_args(["file1", "file2"],
-                                            dict(moocow="milk")),
-                         ["--moocow=milk", "file1", "file2"])
-        self.assertEqual(self.ob.build_args(args=["file1"]), ["file1"])
-        self.assertEqual(self.ob.build_args(["file1"], {"this": True,
-                                             "is": None,
-                                             "it": 42}),
-                         ["--this", "--it=42", "file1"])
+        built = self.ob.build_args(["file1", "file2"], dict(moocow="milk"))
+        self.assertEqual(built, ["--moocow=milk", "file1", "file2"])
+
+        built = self.ob.build_args(args=["file1"])
+        self.assertEqual(built, ["file1"])
+
+        built = self.ob.build_args(["file1"],
+                                   {"this": True, "is": None, "it": 42})
+        self.assertEqual(built, ["--this", "--it=42", "file1"])
 
     def test_build_cmdline(self):
-        self.assertEqual(self.ob.build_cmdline(["/usr/local"],
-                                               dict(color=True),
-                                               "ls"),
-                         ["ls", "--color", "/usr/local"])
-        self.assertEqual(self.ob.build_cmdline(args=["infile", "outfile"]),
-                         ["myprogram", "infile", "outfile"])
+        built = self.ob.build_cmdline(["/usr/local"], dict(color=True), "ls")
+        self.assertEqual(built, ["ls", "--color", "/usr/local"])
+
+        built = self.ob.build_cmdline(args=["infile", "outfile"])
+        self.assertEqual(built, [sys.executable, "infile", "outfile"])
 
     def test_run(self):
-        self.ob.prog = "ls"
-        self.assertEqual(self.ob.run("/usr/local", color=True), None)
+        self.assertEqual(self.ob.run("-c", "pass"), None)
 
 class TestPythonSubprocess(unittest.TestCase):
     def setUp(self):
