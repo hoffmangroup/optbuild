@@ -8,7 +8,8 @@ like optparse but in reverse
 __version__ = "0.1.0"
 
 from distutils.core import setup
-from disttest import disttest
+
+import disttest
 
 doclines = __doc__.splitlines()
 name, short_description = doclines[0].split(": ")
@@ -24,5 +25,6 @@ setup(name=name,
       long_description = long_description,
       package_dir = {'': 'lib'},
       py_modules = ['optbuild'],
-      cmdclass = dict(test=disttest)
+      cmdclass = dict(install=disttest.install,
+                      test=disttest.test)
       )
