@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.24 $"
+__version__ = "$Revision: 1.25 $"
 
 import new
 import optparse
@@ -16,7 +16,7 @@ _log_exec = _log[".exec"]
 
 def _write_log_exec(cmdline):
     cmdline_strings = [arg for arg in cmdline if isinstance(arg, basestring)]
-    
+
     if " " in "".join(cmdline_strings):
         # quote every arg
         _log_exec.info(" ".join("'%s'" % arg.encode("string_escape")
@@ -41,8 +41,16 @@ class SignalError(ReturncodeError):
             signal_text = _signals[-self.returncode]
         except KeyError:
             signal_text = "signal %d" % -self.returncode
-        
+
         return "%s terminated by %s" % (self.cmdline[0], signal_text)
+
+def _returncode_error_factory(cmdline, returncode, output=None, error=None):
+    if returncode >= 0:
+        error_cls = ReturncodeError
+    else:
+        error_cls = SignalError
+
+    raise error_cls, (cmdline, returncode, output, error)
 
 class Stdin(object):
     """
@@ -66,7 +74,7 @@ class OptionBuilder(optparse.OptionParser):
 
     def __call__(self, *args, **kwargs):
         return self.run(*args, **kwargs)
-    
+
     @staticmethod
     def convert_option_name(option):
         return option.replace("_", "-")
@@ -74,18 +82,18 @@ class OptionBuilder(optparse.OptionParser):
     def _build_option(self, option, value):
         """always returns a list"""
         return self.build_option(self.convert_option_name(option), value)
-    
+
     def _build_options(self, options):
         # XXX: use the option_list to check/convert the options
 
         # can't use a listcomp because _build_option always returns a
         # list and the empty ones have to be eaten somehow
-        
+
         res = []
         for option_item in options.iteritems():
             res.extend(self._build_option(*option_item))
         return res
-            
+
     @staticmethod
     def build_option(option, value):
         if value is True:
@@ -101,7 +109,7 @@ class OptionBuilder(optparse.OptionParser):
     def build_cmdline(self, args=(), options={}, prog=None):
         if prog is None:
             prog = self.prog
-            
+
         res = [prog]
         res.extend(self.build_args(args, options))
 
@@ -117,11 +125,7 @@ class OptionBuilder(optparse.OptionParser):
 
         returncode = pipe.wait()
         if returncode:
-            if returncode >= 0:
-                error_class = ReturncodeError
-            else:
-                error_class = SignalError
-            raise error_class, (cmdline, returncode,output, error)
+            _returncode_error_factory(cmdline, returncode, output, error)
 
         res = []
         if stdout == PIPE:
@@ -129,9 +133,11 @@ class OptionBuilder(optparse.OptionParser):
         if stderr == PIPE:
             res.append(error)
 
+        # if there's only one of (output, error), then only return it
         if len(res) == 1:
             return res[0]
         else:
+            # otherwise return a tuple of both
             return tuple(res)
 
     def _getoutput(self, args, options, stdout=None, stderr=None):
@@ -154,7 +160,7 @@ class OptionBuilder(optparse.OptionParser):
                 cwd = arg
             else:
                 arg_list.append(arg)
-            
+
         return self._popen(tuple(arg_list), options, input,
                            stdin, stdout, stderr, cwd)
 
