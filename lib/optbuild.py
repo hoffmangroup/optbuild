@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.25 $"
+__version__ = "$Revision: 1.26 $"
 
 import new
 import optparse
@@ -24,8 +24,8 @@ def _write_log_exec(cmdline):
     else:
         _log_exec.info(" ".join(cmdline_strings))
 
-# proposed subprocess.CalledProcessError is an OSError; so is this:
-class ReturncodeError(OSError):
+# this doesn't have an errno, so it can't be an OSError
+class ReturncodeError(StandardError):
     def __init__(self, cmdline, returncode, output=None, error=None):
         self.cmdline = cmdline
         self.returncode = returncode
