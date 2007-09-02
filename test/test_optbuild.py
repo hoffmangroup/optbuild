@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version__ = "$Revision: 1.3 $"
+__version__ = "$Revision: 1.4 $"
 
 import sys
 import unittest
@@ -14,7 +14,7 @@ class TestOptionBuilder(unittest.TestCase):
         # not really a GNU option builder, but it's the only executable we know
         # about for sure
         self.ob = optbuild.OptionBuilder(prog=sys.executable)
-    
+
     def test_convert_option_name(self):
         self.assertEqual(self.ob.convert_option_name("long_name"), "long-name")
         self.assertEqual(self.ob.convert_option_name("long-name"), "long-name")
@@ -37,6 +37,7 @@ class TestOptionBuilder(unittest.TestCase):
         built = self.ob.build_args(["file1"],
                                    {"this": True, "is": None, "it": 42})
         self.assertEqual(built, ["--this", "--it=42", "file1"])
+
 
     def test_build_cmdline(self):
         built = self.ob.build_cmdline(["/usr/local"], dict(color=True), "ls")

@@ -1,0 +1,21 @@
+==========
+ optbuild
+==========
+by Michael Hoffman <hoffman+python-software@ebi.ac.uk>
+
+Description
+===========
+Build command lines for external programs. Like optparse but in reverse.
+
+Prerequisites
+=============
+- Python
+
+Installation
+============
+python setup.py build
+python setup.py install
+
+License
+=======
+GNU GPLv2
