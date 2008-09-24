@@ -36,7 +36,8 @@ setup(name=name,
       classifiers=classifiers,
       license="GNU GPLv2",
       long_description=long_description,
-      packages=find_packages("."),
+      package_dir={'': 'lib'},
+      py_modules=['optbuild'],
       install_requires=install_requires,
       zip_safe=True
       )
