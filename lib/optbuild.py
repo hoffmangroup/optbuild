@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.26 $"
+__version__ = "$Revision: 1.27 $"
 
+from functools import partial
 import new
 import optparse
 import signal
@@ -210,6 +211,19 @@ class OptionBuilder_ShortOptWithSpace(OptionBuilder):
             return []
         else:
             return ["-%s" % option, str(value)]
+
+class OptionBuilder_ShortOptWithSpace_TF(OptionBuilder_ShortOptWithSpace):
+    @staticmethod
+    def build_option(option, value):
+        parent_build_option = \
+            partial(OptionBuilder_ShortOptWithSpace.build_option, option)
+
+        if value is True:
+            return parent_build_option("T")
+        elif value is False:
+            return parent_build_option("F")
+        else:
+            return parent_build_option(value)
 
 class OptionBuilder_NoHyphenWithEquals(OptionBuilder):
     @staticmethod
