@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.27 $"
+__version__ = "$Revision: 1.28 $"
 
 from functools import partial
 import new
@@ -82,7 +82,16 @@ class OptionBuilder(optparse.OptionParser):
 
     def _build_option(self, option, value):
         """always returns a list"""
-        return self.build_option(self.convert_option_name(option), value)
+        option = self.convert_option_name(option)
+
+        if not isinstance(value, list):
+            value = [value]
+
+        res = []
+        for value_item in value:
+            res.extend(self.build_option(option, value_item))
+
+        return res
 
     def _build_options(self, options):
         # XXX: use the option_list to check/convert the options
@@ -212,6 +221,7 @@ class OptionBuilder_ShortOptWithSpace(OptionBuilder):
         else:
             return ["-%s" % option, str(value)]
 
+# XXX: this should be an AddableMixin instead
 class OptionBuilder_ShortOptWithSpace_TF(OptionBuilder_ShortOptWithSpace):
     @staticmethod
     def build_option(option, value):
@@ -272,6 +282,11 @@ class AddableMixin(object):
 class Mixin_ArgsFirst(AddableMixin):
     def build_args(self, args=(), options={}):
         return list(args) + self._build_options(options)
+
+class Mixin_NoConvertUnderscore(AddableMixin):
+    @staticmethod
+    def convert_option_name(option):
+        return option
 
 def _setup_signals():
     res = {}
