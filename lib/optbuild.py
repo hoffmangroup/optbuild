@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.28 $"
+__version__ = "$Revision: 1.29 $"
 
+from distutils.spawn import find_executable
 from functools import partial
 import new
 import optparse
@@ -72,6 +73,7 @@ class OptionBuilder(optparse.OptionParser):
     """
     def __init__(self, prog=None, *args, **kwargs):
         optparse.OptionParser.__init__(self, prog=prog, *args, **kwargs)
+        self.dry_run = False
 
     def __call__(self, *args, **kwargs):
         return self.run(*args, **kwargs)
@@ -100,8 +102,8 @@ class OptionBuilder(optparse.OptionParser):
         # list and the empty ones have to be eaten somehow
 
         res = []
-        for option_item in options.iteritems():
-            res.extend(self._build_option(*option_item))
+        for key in sorted(options):
+            res.extend(self._build_option(key, options[key]))
         return res
 
     @staticmethod
@@ -116,11 +118,17 @@ class OptionBuilder(optparse.OptionParser):
     def build_args(self, args=(), options={}):
         return self._build_options(options) + list(args)
 
-    def build_cmdline(self, args=(), options={}, prog=None):
+    def get_prog(self, prog):
+        """
+        virtual function to be overriden
+        """
         if prog is None:
             prog = self.prog
 
-        res = [prog]
+        return prog
+
+    def build_cmdline(self, args=(), options={}, prog=None):
+        res = [self.get_prog(prog)]
         res.extend(self.build_args(args, options))
 
         _write_log_exec(res)
@@ -129,6 +137,15 @@ class OptionBuilder(optparse.OptionParser):
     def _popen(self, args, options, input=None,
                stdin=None, stdout=None, stderr=None, cwd=None):
         cmdline = self.build_cmdline(args, options)
+
+        if self.dry_run:
+            if cwd or input:
+                # XXX: print "cd %s" or use a here document
+                raise NotImplementedError
+
+            print " ".join(cmdline)
+            return
+
         pipe = Popen(cmdline, stdin=stdin, stdout=stdout, stderr=stderr,
                      cwd=cwd)
         output, error = pipe.communicate(input)
@@ -287,6 +304,12 @@ class Mixin_NoConvertUnderscore(AddableMixin):
     @staticmethod
     def convert_option_name(option):
         return option
+
+class Mixin_UseFullProgPath(AddableMixin):
+    def get_prog(self, prog):
+        prog = OptionBuilder.get_prog(self, prog)
+
+        return find_executable(prog)
 
 def _setup_signals():
     res = {}
