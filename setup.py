@@ -5,7 +5,7 @@
 like optparse but in reverse
 """
 
-__version__ = "0.1.6"
+__version__ = "0.1.8"
 
 # Copyright 2005-2009 Michael M. Hoffman <mmh1@washington.edu>
 
@@ -39,5 +39,5 @@ setup(name=name,
       package_dir={'': 'lib'},
       py_modules=['optbuild'],
       install_requires=install_requires,
-      zip_safe=True
+      zip_safe=False
       )

@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 from __future__ import division
 
-__version__ = "$Revision: 1.29 $"
+__version__ = "$Revision: 1.30 $"
 
 from distutils.spawn import find_executable
 from functools import partial
-import new
 import optparse
 import signal
 from subprocess import Popen, PIPE
@@ -262,11 +261,12 @@ class OptionBuilder_NoHyphenWithEquals(OptionBuilder):
 
         return ["%s=%s" % (option, value)]
 
+# XXX: this should go into another package
 class AddableMixinMetaclass(type):
     def __add__(cls, other):
         name = "(%s.%s + %s.%s)" % (cls.__module__, cls.__name__,
                                     other.__module__, other.__name__)
-        return new.classobj(name, (cls, other), {})
+        return type(name, (cls, other), {})
 
     __radd__ = __add__
 
@@ -288,13 +288,22 @@ class AddableMixin(object):
         if self.__class__.__name__.startswith("("):
             return "<%s object at 0x%x>" % (self.__class__.__name__, _id(self))
         else:
-            return object.__repr__(self)
+            return super(AddableMixin, self).__repr__(self)
 
-    def __new__(self, *args, **kwargs):
-        return object.__new__(self)
+    def __new__(cls, *args, **kwargs):
+        return super(AddableMixin, cls).__new__(cls, *args, **kwargs)
 
     def __init__(self, *args, **kwargs):
-        return super(object, self).__init__(*args, **kwargs)
+        # different depending on whether old- and new-style classes
+        # are being mixed, because object.__init__() does not call its
+        # superclass. I think this is a bug in object.
+        # XXX: verify and report bug upstream
+        if type(self).mro()[-1] is object:
+            supercls = super(AddableMixin, self)
+        else:
+            supercls = super(object, self)
+
+        return supercls.__init__(*args, **kwargs)
 
 class Mixin_ArgsFirst(AddableMixin):
     def build_args(self, args=(), options={}):
@@ -309,7 +318,12 @@ class Mixin_UseFullProgPath(AddableMixin):
     def get_prog(self, prog):
         prog = OptionBuilder.get_prog(self, prog)
 
-        return find_executable(prog)
+        res = find_executable(prog)
+
+        if res is None:
+            raise IOError("can't find %s in path" % prog)
+
+        return res
 
 def _setup_signals():
     res = {}
