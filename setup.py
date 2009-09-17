@@ -39,5 +39,5 @@ setup(name=name,
       package_dir={'': 'lib'},
       py_modules=['optbuild'],
       install_requires=install_requires,
-      zip_safe=False
+      zip_safe=True
       )
