@@ -290,6 +290,8 @@ class AddableMixin(object):
         else:
             return super(AddableMixin, self).__repr__(self)
 
+    # XXX: this sometimes yields a deprecation warning when called in Python 2.6
+    # run Segway to get error
     def __new__(cls, *args, **kwargs):
         return super(AddableMixin, cls).__new__(cls, *args, **kwargs)
 
