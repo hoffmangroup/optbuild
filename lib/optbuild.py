@@ -290,22 +290,34 @@ class AddableMixin(object):
         else:
             return super(AddableMixin, self).__repr__(self)
 
-    # XXX: this sometimes yields a deprecation warning when called in Python 2.6
-    # run Segway to get error
     def __new__(cls, *args, **kwargs):
-        return super(AddableMixin, cls).__new__(cls, *args, **kwargs)
+        # beginning in Python 2.6, object.__new__ no longer takes
+        # args, and raises a deprecation warning, so we strip out any
+        # args and kwargs (technically OK) before continuing on
+        new = super(AddableMixin, cls).__new__
+
+        if new == object.__new__:
+            return new(cls)
+        else:
+            return new(cls, *args, **kwargs)
 
     def __init__(self, *args, **kwargs):
         # different depending on whether old- and new-style classes
-        # are being mixed, because object.__init__() does not call its
-        # superclass. I think this is a bug in object.
-        # XXX: verify and report bug upstream
-        if type(self).mro()[-1] is object:
-            supercls = super(AddableMixin, self)
-        else:
-            supercls = super(object, self)
+        # are being mixed, because object.__init__() does not call the
+        # next method. It does not cooperate with super() by lack of
+        # design. I think this is a bug, but I'm sure the Python core
+        # developers wouldn't
 
-        return supercls.__init__(*args, **kwargs)
+        if type(self).mro()[-1] is object:
+            superobj = super(AddableMixin, self)
+        else:
+            superobj = super(object, self)
+
+        # see comment for AddableMixin.__new__
+        if super(AddableMixin, type(self)).__init__ == object.__init__:
+            return superobj.__init__()
+        else:
+            return superobj.__init__(*args, **kwargs)
 
 class Mixin_ArgsFirst(AddableMixin):
     def build_args(self, args=(), options={}):
