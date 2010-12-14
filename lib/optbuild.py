@@ -15,6 +15,9 @@ from autolog import autolog
 _log = autolog()
 _log_exec = _log[".exec"]
 
+# XXX: we should eliminate dependencies on optparse, I don't think it
+# gets us anything
+
 def _write_log_exec(cmdline):
     cmdline_strings = [arg for arg in cmdline if isinstance(arg, basestring)]
 
@@ -308,16 +311,21 @@ class AddableMixin(object):
         # design. I think this is a bug, but I'm sure the Python core
         # developers wouldn't
 
+        # if this mixing with a new-style class
         if type(self).mro()[-1] is object:
-            superobj = super(AddableMixin, self)
+            supertype = AddableMixin
         else:
-            superobj = super(object, self)
+            # for old-style classes, object goes in the middle
+            supertype = object
+
+        init_unbound = super(supertype, type(self)).__init__
+        init_bound = super(supertype, self).__init__
 
         # see comment for AddableMixin.__new__
-        if super(AddableMixin, type(self)).__init__ == object.__init__:
-            return superobj.__init__()
+        if init_unbound == object.__init__:
+            return init_bound()
         else:
-            return superobj.__init__(*args, **kwargs)
+            return init_bound(*args, **kwargs)
 
 class Mixin_ArgsFirst(AddableMixin):
     def build_args(self, args=(), options={}):
