@@ -5,9 +5,9 @@
 like optparse but in reverse
 """
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
-# Copyright 2005-2009 Michael M. Hoffman <mmh1@washington.edu>
+# Copyright 2005-2010 Michael M. Hoffman <mmh1@washington.edu>
 
 from ez_setup import use_setuptools
 use_setuptools()
