@@ -7,7 +7,7 @@ like optparse but in reverse
 
 __version__ = "0.1.11"
 
-# Copyright 2005-2010 Michael M. Hoffman <mmh1@washington.edu>
+# Copyright 2005-2011 Michael M. Hoffman <mmh1@washington.edu>
 
 from ez_setup import use_setuptools
 use_setuptools()
@@ -29,8 +29,8 @@ install_requires = ["autolog"]
 setup(name=name,
       version=__version__,
       description=short_description,
-      author="Michael Hoffman",
-      author_email="mmh1@washington.edu",
+      author="Michael M. Hoffman",
+      author_email="mmh1@uw.edu",
       url=url,
       download_url=download_url,
       classifiers=classifiers,

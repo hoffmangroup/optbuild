@@ -240,6 +240,16 @@ class OptionBuilder_ShortOptWithSpace(OptionBuilder):
         else:
             return ["-%s" % option, str(value)]
 
+class OptionBuilder_ShortOptWithEquals(OptionBuilder):
+    @staticmethod
+    def build_option(option, value):
+        if value is True:
+            return ["-%s" % option]
+        elif value is False or value is None:
+            return []
+        else:
+            return ["-%s=%s" % (option, str(value))]
+
 # XXX: this should be an AddableMixin instead
 class OptionBuilder_ShortOptWithSpace_TF(OptionBuilder_ShortOptWithSpace):
     @staticmethod
