@@ -88,6 +88,12 @@ class OptionBuilder(optparse.OptionParser):
     def __call__(self, *args, **kwargs):
         return self.run(*args, **kwargs)
 
+    def __str__(self):
+        return self.prog
+
+    def __repr__(self):
+        return "%s('%s')" % (self.__class__, str(self).encode("string_escape"))
+
     @staticmethod
     def convert_option_name(option):
         return option.replace("_", "-")
