@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 __version__ = "$Revision: 1.4 $"
 
 import sys
@@ -36,7 +37,7 @@ class TestOptionBuilder(unittest.TestCase):
 
         built = self.ob.build_args(["file1"],
                                    {"this": True, "is": None, "it": 42})
-        self.assertEqual(built, ["--this", "--it=42", "file1"])
+        self.assertEqual(built, ["--it=42", "--this", "file1"])
 
 
     def test_build_cmdline(self):
@@ -65,8 +66,8 @@ class TestSignalError(TestPythonSubprocess):
     def test_str(self):
         try:
             self.run_python()
-        except optbuild.SignalError, err:
-            self.assert_(str(err).endswith("terminated by SIGKILL"))
+        except optbuild.SignalError as err:
+            self.assertTrue(str(err).endswith("terminated by SIGKILL"))
 
 class TestReturncodeError(TestPythonSubprocess):
     command = "import sys; sys.exit(33)"
