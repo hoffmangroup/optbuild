@@ -21,6 +21,7 @@ _log_exec = _log[".exec"]
 # XXX: we should eliminate dependencies on optparse, I don't think it
 # gets us anything
 
+
 def _write_log_exec(cmdline):
     cmdline_strings = [arg for arg in cmdline if isinstance(arg, six.string_types)]
 
@@ -31,8 +32,10 @@ def _write_log_exec(cmdline):
     else:
         _log_exec.info(" ".join(cmdline_strings))
 
-# this doesn't have an errno, so it can't be an OSError
+
+# XXX: should probably be deprecated in favor of subprocess.CalledProcessError
 class ReturncodeError(Exception):
+    ## this doesn't have an errno, so it can't be an OSError
     def __init__(self, cmdline, returncode, output=None, error=None):
         self.cmdline = cmdline
         self.returncode = returncode
@@ -41,6 +44,7 @@ class ReturncodeError(Exception):
 
     def __str__(self):
         return "%s returned %s" % (self.cmdline[0], self.returncode)
+
 
 class SignalError(ReturncodeError):
     def __str__(self):
@@ -51,6 +55,7 @@ class SignalError(ReturncodeError):
 
         return "%s terminated by %s" % (self.cmdline[0], signal_text)
 
+
 def _returncode_error_factory(cmdline, returncode, output=None, error=None):
     if returncode >= 0:
         error_cls = ReturncodeError
@@ -59,6 +64,7 @@ def _returncode_error_factory(cmdline, returncode, output=None, error=None):
 
     raise error_cls(cmdline, returncode, output, error)
 
+
 class Stdin(object):
     """
     indicate that an "argument" is actually input
@@ -66,11 +72,13 @@ class Stdin(object):
     def __init__(self, data):
         self.data = data
 
+
 class Cwd(str):
     """
     indicate that an "argument" is a directory to change to
     """
     pass
+
 
 class OptionBuilder(optparse.OptionParser):
     """
@@ -82,6 +90,12 @@ class OptionBuilder(optparse.OptionParser):
 
     def __call__(self, *args, **kwargs):
         return self.run(*args, **kwargs)
+
+    def __str__(self):
+        return self.prog
+
+    def __repr__(self):
+        return "%s('%s')" % (self.__class__, str(self).encode("string_escape"))
 
     @staticmethod
     def convert_option_name(option):
@@ -107,7 +121,7 @@ class OptionBuilder(optparse.OptionParser):
         # list and the empty ones have to be eaten somehow
 
         res = []
-        for key in sorted(options):
+        for key in options:
             res.extend(self._build_option(key, options[key]))
         return res
 
@@ -148,7 +162,7 @@ class OptionBuilder(optparse.OptionParser):
                 # XXX: print "cd %s" or use a here document
                 raise NotImplementedError
 
-            print(" ".join(cmdline))
+            print((" ".join(cmdline)))
             return
 
         pipe = Popen(cmdline, stdin=stdin, stdout=stdout, stderr=stderr,
@@ -186,7 +200,8 @@ class OptionBuilder(optparse.OptionParser):
                 elif isinstance(arg.data, file):
                     stdin = arg.data
                 else:
-                    raise ValueError("Stdin arg does not contain basestring or file")
+                    raise ValueError("Stdin arg does not contain basestring"
+                                     " or file")
             elif isinstance(arg, Cwd):
                 cwd = arg
             else:
@@ -222,6 +237,7 @@ class OptionBuilder(optparse.OptionParser):
 
         return Popen(cmdline)
 
+
 class OptionBuilder_LongOptWithSpace(OptionBuilder):
     @staticmethod
     def build_option(option, value):
@@ -231,6 +247,7 @@ class OptionBuilder_LongOptWithSpace(OptionBuilder):
             return []
         else:
             return ["--%s" % option, str(value)]
+
 
 class OptionBuilder_ShortOptWithSpace(OptionBuilder):
     @staticmethod
@@ -242,6 +259,7 @@ class OptionBuilder_ShortOptWithSpace(OptionBuilder):
         else:
             return ["-%s" % option, str(value)]
 
+
 class OptionBuilder_ShortOptWithEquals(OptionBuilder):
     @staticmethod
     def build_option(option, value):
@@ -252,8 +270,10 @@ class OptionBuilder_ShortOptWithEquals(OptionBuilder):
         else:
             return ["-%s=%s" % (option, str(value))]
 
-# XXX: this should be an AddableMixin instead
+
 class OptionBuilder_ShortOptWithSpace_TF(OptionBuilder_ShortOptWithSpace):
+    # XXX: this should be an AddableMixin instead
+
     @staticmethod
     def build_option(option, value):
         parent_build_option = \
@@ -266,6 +286,7 @@ class OptionBuilder_ShortOptWithSpace_TF(OptionBuilder_ShortOptWithSpace):
         else:
             return parent_build_option(value)
 
+
 class OptionBuilder_NoHyphenWithEquals(OptionBuilder):
     @staticmethod
     def build_option(option, value):
@@ -276,7 +297,7 @@ class OptionBuilder_NoHyphenWithEquals(OptionBuilder):
 
         return ["%s=%s" % (option, value)]
 
-# XXX: this should go into another package
+
 class AddableMixinMetaclass(type):
     def __add__(cls, other):
         name = "(%s.%s + %s.%s)" % (cls.__module__, cls.__name__,
@@ -292,9 +313,11 @@ class AddableMixinMetaclass(type):
         else:
             return type.__repr__(cls)
 
+
 def _id(obj):
     # found on python-dev somewhere to get around negative id()
     return (sys.maxsize * 2 + 1) & id(obj)
+
 
 class AddableMixin(six.with_metaclass(AddableMixinMetaclass, object)):
     def __repr__(self):
@@ -337,14 +360,17 @@ class AddableMixin(six.with_metaclass(AddableMixinMetaclass, object)):
         else:
             return init_bound(*args, **kwargs)
 
+
 class Mixin_ArgsFirst(AddableMixin):
     def build_args(self, args=(), options={}):
         return list(args) + self._build_options(options)
+
 
 class Mixin_NoConvertUnderscore(AddableMixin):
     @staticmethod
     def convert_option_name(option):
         return option
+
 
 class Mixin_UseFullProgPath(AddableMixin):
     def get_prog(self, prog):
@@ -357,6 +383,7 @@ class Mixin_UseFullProgPath(AddableMixin):
 
         return res
 
+
 def _setup_signals():
     res = {}
     for key, value in six.iteritems(vars(signal)):
@@ -367,8 +394,10 @@ def _setup_signals():
 
 _signals = _setup_signals()
 
+
 def main(args):
     pass
+
 
 def _test(*args, **keywds):
     import doctest

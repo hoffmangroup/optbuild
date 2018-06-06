@@ -37,7 +37,7 @@ class TestOptionBuilder(unittest.TestCase):
 
         built = self.ob.build_args(["file1"],
                                    {"this": True, "is": None, "it": 42})
-        self.assertEqual(built, ["--it=42", "--this", "file1"])
+        self.assertEqual(built, [ "--it=42", "--this", "file1"])
 
 
     def test_build_cmdline(self):
