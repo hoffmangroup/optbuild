@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import division, absolute_import, print_function
-import six
+from six import viewitems, view_metaclass
 __version__ = "$Revision: 1.30 $"
 
 from distutils.spawn import find_executable
@@ -118,7 +118,7 @@ class OptionBuilder(optparse.OptionParser):
         # list and the empty ones have to be eaten somehow
 
         res = []
-        for key in options:
+        for key in sorted(options.keys()):
             res.extend(self._build_option(key, options[key]))
         return res
 
@@ -316,7 +316,7 @@ def _id(obj):
     return (sys.maxsize * 2 + 1) & id(obj)
 
 
-class AddableMixin(six.with_metaclass(AddableMixinMetaclass, object)):
+class AddableMixin(with_metaclass(AddableMixinMetaclass, object)):
     def __repr__(self):
         if self.__class__.__name__.startswith("("):
             return "<%s object at 0x%x>" % (self.__class__.__name__, _id(self))
@@ -383,7 +383,7 @@ class Mixin_UseFullProgPath(AddableMixin):
 
 def _setup_signals():
     res = {}
-    for key, value in six.iteritems(vars(signal)):
+    for key, value in viewitems(vars(signal)):
         if key.startswith("SIG") and key[4] != "_":
             res[value] = key
 
