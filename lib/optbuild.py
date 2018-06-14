@@ -159,7 +159,7 @@ class OptionBuilder(optparse.OptionParser):
                 # XXX: print "cd %s" or use a here document
                 raise NotImplementedError
 
-            print((" ".join(cmdline)))
+            print(" ".join(cmdline))
             return
 
         pipe = Popen(cmdline, stdin=stdin, stdout=stdout, stderr=stderr,
