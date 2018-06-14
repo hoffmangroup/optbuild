@@ -9,9 +9,6 @@ __version__ = "0.1.12"
 
 # Copyright 2005-2011 Michael M. Hoffman <mmh1@washington.edu>
 
-from ez_setup import use_setuptools
-use_setuptools()
-
 from setuptools import setup
 
 doclines = __doc__.splitlines()
