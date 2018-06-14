@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import division, absolute_import, print_function
-from six import viewitems, view_metaclass
+from six import viewitems, view_metaclass, string_types
 __version__ = "$Revision: 1.30 $"
 
 from distutils.spawn import find_executable
@@ -20,7 +20,7 @@ _log_exec = _log[".exec"]
 
 
 def _write_log_exec(cmdline):
-    cmdline_strings = [arg for arg in cmdline if isinstance(arg, six.string_types)]
+    cmdline_strings = [arg for arg in cmdline if isinstance(arg, string_types)]
 
     if " " in "".join(cmdline_strings):
         # quote every arg
@@ -191,7 +191,7 @@ class OptionBuilder(optparse.OptionParser):
         arg_list = []
         for arg in args:
             if isinstance(arg, Stdin):
-                if isinstance(arg.data, six.string_types):
+                if isinstance(arg.data, string_types):
                     input = arg.data
                     stdin = PIPE
                 elif isinstance(arg.data, file):
