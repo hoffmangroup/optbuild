@@ -5,7 +5,7 @@
 like optparse but in reverse
 """
 
-__version__ = "0.1.12"
+__version__ = "0.2"
 
 # Copyright 2005-2011 Michael M. Hoffman <mmh1@washington.edu>
 
