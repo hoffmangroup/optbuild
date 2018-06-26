@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import division, absolute_import, print_function
-from six import viewitems, view_metaclass, string_types
+from six import viewitems, string_types, with_metaclass
 __version__ = "$Revision: 1.30 $"
 
 from distutils.spawn import find_executable
@@ -162,11 +162,19 @@ class OptionBuilder(optparse.OptionParser):
             print(" ".join(cmdline))
             return
 
-        pipe = Popen(cmdline, stdin=stdin, stdout=stdout, stderr=stderr,
-                     cwd=cwd)
-        output, error = pipe.communicate(input)
+        try:
+            pipe = Popen(cmdline, stdin=stdin, stdout=stdout, stderr=stderr,
+                        cwd=cwd)
+            output, error = pipe.communicate(input)
 
-        returncode = pipe.wait()
+            returncode = pipe.wait()
+        except OSError as os_exception:
+            print("Failed to run command {}: {}".format(" ".join(cmdline),
+                                                        os_exception),
+                  file=sys.stderr)
+            # Re raise the exception and exit
+            raise
+
         if returncode:
             _returncode_error_factory(cmdline, returncode, output, error)
 
