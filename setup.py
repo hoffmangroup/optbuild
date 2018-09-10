@@ -21,7 +21,7 @@ download_url = "%s%s-%s.tar.gz" % (url, name, __version__)
 classifiers = ["Natural Language :: English",
                "Programming Language :: Python"]
 
-install_requires = ["autolog", "six"]
+install_requires = ["autolog>=0.2.0", "six"]
 
 setup(name=name,
       version=__version__,
