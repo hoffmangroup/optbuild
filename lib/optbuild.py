@@ -3,7 +3,6 @@ from __future__ import division, absolute_import, print_function
 from six import viewitems, string_types, with_metaclass
 __version__ = "$Revision: 1.30 $"
 
-from distutils.spawn import find_executable
 from functools import partial
 import optparse
 import signal
