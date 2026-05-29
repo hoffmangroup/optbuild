@@ -7,6 +7,7 @@ from distutils.spawn import find_executable
 from functools import partial
 import optparse
 import signal
+from shutil import which
 from subprocess import Popen, PIPE
 import sys
 
@@ -381,7 +382,7 @@ class Mixin_UseFullProgPath(AddableMixin):
     def get_prog(self, prog):
         prog = OptionBuilder.get_prog(self, prog)
 
-        res = find_executable(prog)
+        res = which(prog)
 
         if res is None:
             raise IOError("can't find %s in path" % prog)
